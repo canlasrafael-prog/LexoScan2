@@ -1,0 +1,5 @@
+{
+  "name": "LexoScan",
+  "description": "Vocabulary Intelligence app that extracts challenging words from documents using AI.",
+  "requestFramePermissions": []
+}
