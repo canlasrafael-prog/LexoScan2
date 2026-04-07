@@ -159,7 +159,7 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
       const model = ai.models.generateContent({
         model: "gemini-2.0-flash",
         contents: {
@@ -198,7 +198,7 @@ const App: React.FC = () => {
     setSlots(prev => prev.map((s, i) => i === index ? { ...s, isChanging: true } : s));
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
       const model = ai.models.generateContent({
         model: "gemini-2.0-flash",
         contents: `You are a vocabulary expert. Find ONE replacement vocabulary word for a ${gradeLevel} student. Requirements: Part of speech: ${slot.pos === 'Any' ? 'any' : slot.pos}. Must be DIFFERENT from these already used words: ${existingWords}. Return ONLY a JSON object: { "word": "string", "partOfSpeech": "string", "definition": "string", "example": "string" }`,
