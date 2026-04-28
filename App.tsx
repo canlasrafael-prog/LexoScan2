@@ -161,7 +161,7 @@ const App: React.FC = () => {
     try {
       const prompt = `You are a vocabulary expert. Analyze this document and find ${wordCount} vocabulary words that are challenging for ${gradeLevel} students. Respect the part of speech selected per slot: ${slots.map((s, i) => `Slot ${i+1}: ${s.pos}`).join(', ')}. Return ONLY a JSON array: [{ "word": "string", "partOfSpeech": "string", "definition": "string", "example": "string" }]`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -214,7 +214,7 @@ const App: React.FC = () => {
     try {
       const prompt = `You are a vocabulary expert. Find ONE replacement vocabulary word for a ${gradeLevel} student. Requirements: Part of speech: ${slot.pos === 'Any' ? 'any' : slot.pos}. Must be DIFFERENT from these already used words: ${existingWords}. Return ONLY a JSON object: { "word": "string", "partOfSpeech": "string", "definition": "string", "example": "string" }`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
