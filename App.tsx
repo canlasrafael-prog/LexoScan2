@@ -22,7 +22,7 @@ import {
   Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleGenAI } from "@google/genai";
+
 
 // --- Types ---
 interface WordData {
@@ -159,22 +159,31 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
-      const model = ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: {
-          parts: [
-            { text: `You are a vocabulary expert. Analyze this document and find ${wordCount} vocabulary words that are challenging for ${gradeLevel} students. Respect the part of speech selected per slot: ${slots.map((s, i) => `Slot ${i+1}: ${s.pos}`).join(', ')}. Return ONLY a JSON array: [{ "word": "string", "partOfSpeech": "string", "definition": "string", "example": "string" }]` },
-            fileContent.base64 
-              ? { inlineData: { mimeType: fileContent.mimeType!, data: fileContent.base64 } }
-              : { text: fileContent.text! }
-          ]
-        },
-        config: { responseMimeType: "application/json" }
+      const prompt = `You are a vocabulary expert. Analyze this document and find ${wordCount} vocabulary words that are challenging for ${gradeLevel} students. Respect the part of speech selected per slot: ${slots.map((s, i) => `Slot ${i+1}: ${s.pos}`).join(', ')}. Return ONLY a JSON array: [{ "word": "string", "partOfSpeech": "string", "definition": "string", "example": "string" }]`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              fileContent.base64 
+                ? { inlineData: { mimeType: fileContent.mimeType!, data: fileContent.base64 } }
+                : { text: fileContent.text! }
+            ]
+          }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
       });
 
-      const response = await model;
-      const data = JSON.parse(response.text || '[]');
+      if (!response.ok) throw new Error('API request failed');
+      
+      const result = await response.json();
+      const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      const data = JSON.parse(textResponse);
       
       setSlots(prev => prev.map((slot, i) => ({
         ...slot,
@@ -198,15 +207,26 @@ const App: React.FC = () => {
     setSlots(prev => prev.map((s, i) => i === index ? { ...s, isChanging: true } : s));
 
     try {
-      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
-      const model = ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: `You are a vocabulary expert. Find ONE replacement vocabulary word for a ${gradeLevel} student. Requirements: Part of speech: ${slot.pos === 'Any' ? 'any' : slot.pos}. Must be DIFFERENT from these already used words: ${existingWords}. Return ONLY a JSON object: { "word": "string", "partOfSpeech": "string", "definition": "string", "example": "string" }`,
-        config: { responseMimeType: "application/json" }
+      const prompt = `You are a vocabulary expert. Find ONE replacement vocabulary word for a ${gradeLevel} student. Requirements: Part of speech: ${slot.pos === 'Any' ? 'any' : slot.pos}. Must be DIFFERENT from these already used words: ${existingWords}. Return ONLY a JSON object: { "word": "string", "partOfSpeech": "string", "definition": "string", "example": "string" }`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
       });
 
-      const response = await model;
-      const newWord = JSON.parse(response.text || '{}');
+      if (!response.ok) throw new Error('API request failed');
+
+      const result = await response.json();
+      const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      const newWord = JSON.parse(textResponse);
       
       setSlots(prev => prev.map((s, i) => i === index ? { ...s, data: newWord, isChanging: false } : s));
     } catch (err) {
