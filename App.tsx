@@ -166,11 +166,12 @@ const App: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{
+            role: 'user',
             parts: [
               { text: prompt },
               fileContent.base64 
                 ? { inlineData: { mimeType: fileContent.mimeType!, data: fileContent.base64 } }
-                : { text: fileContent.text! }
+                : { text: fileContent.text || "" }
             ]
           }],
           generationConfig: {
@@ -179,7 +180,11 @@ const App: React.FC = () => {
         })
       });
 
-      if (!response.ok) throw new Error('API request failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Gemini API Error:", errorData);
+        throw new Error(errorData.error?.message || 'API request failed');
+      }
       
       const result = await response.json();
       const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
@@ -214,6 +219,7 @@ const App: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{
+            role: 'user',
             parts: [{ text: prompt }]
           }],
           generationConfig: {
@@ -222,7 +228,11 @@ const App: React.FC = () => {
         })
       });
 
-      if (!response.ok) throw new Error('API request failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Gemini API Error (Change Word):", errorData);
+        throw new Error(errorData.error?.message || 'API request failed');
+      }
 
       const result = await response.json();
       const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
